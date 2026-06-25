@@ -36,9 +36,9 @@ CREATE TABLE secret
 );
 
 INSERT INTO `user` (`id`, `first_name`, `last_name`, `email`, `password`) VALUES
-(1, 'Hans', 'Muster', 'hans.muster@bbw.ch', '$2b$10$OP0LXMrAh8bgNrWilXayUOiGBIbI3yOZS4GavpKERfvrMmeF6ysOu'),
-(2, 'Paula', 'Kuster', 'paula.kuster@bbw.ch', '$2b$10$bq0gr9CO/bC3SybzTzkpjO8PiyH.ow6lx1oMFcdODUf/l1D2t3etC'),
-(3, 'Andrea', 'Oester', 'andrea.oester@bbw.ch', '$2b$10$tcBhFJQ4EKJd6P/L.KnL4ee63ygpyAa1ubHQZCbItBpaweUz18k5m');
+(1, 'Hans', '11111111-1111-4111-8111-111111111111', 'Muster', 'hans.muster@bbw.ch', '$2b$10$OP0LXMrAh8bgNrWilXayUOiGBIbI3yOZS4GavpKERfvrMmeF6ysOu'),
+(2, 'Paula', '22222222-2222-4222-8222-222222222222', 'Kuster', 'paula.kuster@bbw.ch', '$2b$10$bq0gr9CO/bC3SybzTzkpjO8PiyH.ow6lx1oMFcdODUf/l1D2t3etC'),
+(3, 'Andrea', '33333333-3333-4333-8333-333333333333', 'Oester', 'andrea.oester@bbw.ch', '$2b$10$tcBhFJQ4EKJd6P/L.KnL4ee63ygpyAa1ubHQZCbItBpaweUz18k5m');
 
 INSERT INTO `secret` (`id`, `secret_uuid`, `user_id`, `content`)
 VALUES (1, 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 1, '{
