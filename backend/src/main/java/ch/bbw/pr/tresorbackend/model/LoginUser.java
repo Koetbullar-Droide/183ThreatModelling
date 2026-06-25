@@ -2,6 +2,7 @@ package ch.bbw.pr.tresorbackend.model;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import lombok.ToString;
 import lombok.Value;
 
 /**
@@ -16,5 +17,6 @@ public class LoginUser {
    private String email;
 
    @NotBlank(message="Password is required.")
+   @ToString.Exclude
    private String password;
 }
