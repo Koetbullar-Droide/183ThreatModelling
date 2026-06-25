@@ -169,10 +169,10 @@ public class UserController {
       return ResponseEntity.accepted().body(json);
    }
 
-   // simple login with no websecurity, just name and password
+   // simple login with no websecurity, just email and password
    @CrossOrigin(origins = "${CROSS_ORIGIN}")
    @PostMapping("/login")
-   public ResponseEntity<LoginResponse> doLoginUser(@RequestBody LoginUser loginUser, BindingResult bindingResult) {
+   public ResponseEntity<LoginResponse> doLoginUser(@Valid @RequestBody LoginUser loginUser, BindingResult bindingResult) {
       System.out.println("UserController.doLoginUser: " + loginUser);
 
       if (bindingResult.hasErrors()) {
@@ -185,11 +185,15 @@ public class UserController {
       User user = userService.findByEmail(loginUser.getEmail());
       if (user == null) {
          System.out.println("UserController.doLoginUser: user not found");
-         return ResponseEntity.badRequest().body(new LoginResponse("No user found with this email", null));
+         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+               .body(new LoginResponse("Invalid email or password", null));
       }
 
-      //ToDo: add verification for password match: loginUser.getPassword() vs user.getPassword
-      //todo add implementation
+      if (!passwordService.matches(loginUser.getPassword(), user.getPassword())) {
+         System.out.println("UserController.doLoginUser: invalid password");
+         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+               .body(new LoginResponse("Invalid email or password", null));
+      }
 
       System.out.println("UserController.doLoginUser: login successful");
       return ResponseEntity.ok(new LoginResponse("Login successful", user.getId()));
