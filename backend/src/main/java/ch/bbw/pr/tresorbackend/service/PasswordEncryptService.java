@@ -1,25 +1,22 @@
 package ch.bbw.pr.tresorbackend.service;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-/**
- * PasswordEncryptService
- *   used to hash password and verify match
- * @author Peter Rutschmann
- */
 @Service
 public class PasswordEncryptService {
-   //todo add implementation here
+
+   private final BCryptPasswordEncoder passwordEncoder;
 
    public PasswordEncryptService() {
-      //todo add implementation here
+      this.passwordEncoder = new BCryptPasswordEncoder();
    }
 
    public String hashPassword(String password) {
-      //todo add implementation here
-      return password;
+      return passwordEncoder.encode(password);
    }
 
-   //Todo add password match function: password vs hashedPassword
-
+   public boolean matches(String rawPassword, String hashedPassword) {
+      return passwordEncoder.matches(rawPassword, hashedPassword);
+   }
 }
