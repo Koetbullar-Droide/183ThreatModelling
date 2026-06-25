@@ -176,12 +176,14 @@ public class UserController {
         User user = userService.findByEmail(loginUser.getEmail());
         if (user == null) {
             logger.info("UserController.doLoginUser: user not found");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new LoginResponse("Invalid email or password", null));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+               .body(new LoginResponse("Invalid email or password", null));
         }
 
-      if (!passwordService.matches(loginUser.getPassword(), user.getPassword())) {
-         logger.info("UserController.doLoginUser: invalid password");
-         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new LoginResponse("Invalid email or password", null));
+      if (!loginUser.getPassword().equals(user.getPassword())) {
+         System.out.println("UserController.doLoginUser: invalid password");
+         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+               .body(new LoginResponse("Invalid email or password", null));
       }
 
         logger.info("UserController.doLoginUser: login successful");
