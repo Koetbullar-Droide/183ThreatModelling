@@ -39,14 +39,14 @@ public class UserController {
       //captcha
       //todo add implementation
 
-      System.out.println("UserController.createUser: captcha passed.");
+      logger.info("UserController.createUser: captcha passed.");
 
       //input validation
       if (bindingResult.hasErrors()) {
          List<String> errors = bindingResult.getFieldErrors().stream()
                .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
                .collect(Collectors.toList());
-         System.out.println("UserController.createUser " + errors);
+         logger.info("UserController.createUser validation errors: {}", errors);
 
          JsonArray arr = new JsonArray();
          errors.forEach(arr::add);
@@ -54,14 +54,20 @@ public class UserController {
          obj.add("message", arr);
          String json = new Gson().toJson(obj);
 
-         System.out.println("UserController.createUser, validation fails: " + json);
+         logger.info("UserController.createUser, validation fails");
          return ResponseEntity.badRequest().body(json);
       }
-      System.out.println("UserController.createUser: input validation passed");
+      logger.info("UserController.createUser: input validation passed");
 
       //password validation
-      //todo add implementation
-      System.out.println("UserController.createUser, password validation passed");
+      if (!registerUser.getPassword().equals(registerUser.getPasswordConfirmation())) {
+         JsonObject obj = new JsonObject();
+         obj.addProperty("message", "Password and password confirmation do not match");
+         String json = new Gson().toJson(obj);
+         logger.info("UserController.createUser, password confirmation mismatch");
+         return ResponseEntity.badRequest().body(json);
+      }
+      logger.info("UserController.createUser, password validation passed");
 
       //transform registerUser to user
       User user = new User(
@@ -75,14 +81,14 @@ public class UserController {
       User savedUser = userService.createUser(user);
       JsonObject obj = new JsonObject();
       if (savedUser != null) {
-         System.out.println("UserController.createUser, user saved in db");
+         logger.info("UserController.createUser, user saved in db");
          obj.addProperty("answer", "User saved");
       } else {
-         System.out.println("UserController.createUser, user not saved in db");
+         logger.info("UserController.createUser, user not saved in db");
          obj.addProperty("answer", "User not saved");
       }
       String json = new Gson().toJson(obj);
-      System.out.println("UserController.createUser " + json);
+      logger.info("UserController.createUser completed");
       return ResponseEntity.accepted().body(json);
    }
 
@@ -131,13 +137,13 @@ public class UserController {
    @CrossOrigin(origins = "${CROSS_ORIGIN}")
    @PostMapping("/byemail")
    public ResponseEntity<String> getUserIdByEmail(@RequestBody EmailAdress email, BindingResult bindingResult) {
-      System.out.println("UserController.getUserIdByEmail: " + email);
+      logger.info("UserController.getUserIdByEmail called");
       //input validation
       if (bindingResult.hasErrors()) {
          List<String> errors = bindingResult.getFieldErrors().stream()
                .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
                .collect(Collectors.toList());
-         System.out.println("UserController.createUser " + errors);
+         logger.info("UserController.getUserIdByEmail validation errors: {}", errors);
 
          JsonArray arr = new JsonArray();
          errors.forEach(arr::add);
@@ -145,27 +151,27 @@ public class UserController {
          obj.add("message", arr);
          String json = new Gson().toJson(obj);
 
-         System.out.println("UserController.createUser, validation fails: " + json);
+         logger.info("UserController.getUserIdByEmail validation fails");
          return ResponseEntity.badRequest().body(json);
       }
 
-      System.out.println("UserController.getUserIdByEmail: input validation passed");
+      logger.info("UserController.getUserIdByEmail: input validation passed");
 
       User user = userService.findByEmail(email.getEmail());
       if (user == null) {
-         System.out.println("UserController.getUserIdByEmail, no user found with email: " + email);
+         logger.info("UserController.getUserIdByEmail, no user found for email");
          JsonObject obj = new JsonObject();
          obj.addProperty("message", "No user found with this email");
          String json = new Gson().toJson(obj);
 
-         System.out.println("UserController.getUserIdByEmail, fails: " + json);
+         logger.info("UserController.getUserIdByEmail fails");
          return ResponseEntity.badRequest().body(json);
       }
-      System.out.println("UserController.getUserIdByEmail, user find by email");
+      logger.info("UserController.getUserIdByEmail, user found by email");
       JsonObject obj = new JsonObject();
       obj.addProperty("answer", user.getId());
       String json = new Gson().toJson(obj);
-      System.out.println("UserController.getUserIdByEmail " + json);
+      logger.info("UserController.getUserIdByEmail completed");
       return ResponseEntity.accepted().body(json);
    }
 
@@ -173,7 +179,7 @@ public class UserController {
    @CrossOrigin(origins = "${CROSS_ORIGIN}")
    @PostMapping("/login")
    public ResponseEntity<LoginResponse> doLoginUser(@RequestBody LoginUser loginUser, BindingResult bindingResult) {
-      System.out.println("UserController.doLoginUser: " + loginUser);
+      logger.info("UserController.doLoginUser called");
 
       if (bindingResult.hasErrors()) {
          String errorMessage = bindingResult.getFieldErrors().stream()
@@ -184,14 +190,16 @@ public class UserController {
 
       User user = userService.findByEmail(loginUser.getEmail());
       if (user == null) {
-         System.out.println("UserController.doLoginUser: user not found");
+         logger.info("UserController.doLoginUser: user not found");
          return ResponseEntity.badRequest().body(new LoginResponse("No user found with this email", null));
       }
 
-      //ToDo: add verification for password match: loginUser.getPassword() vs user.getPassword
-      //todo add implementation
+      if (!passwordService.matches(loginUser.getPassword(), user.getPassword())) {
+         logger.info("UserController.doLoginUser: password mismatch");
+         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new LoginResponse("Invalid password", null));
+      }
 
-      System.out.println("UserController.doLoginUser: login successful");
+      logger.info("UserController.doLoginUser: login successful");
       return ResponseEntity.ok(new LoginResponse("Login successful", user.getId()));
    }
 

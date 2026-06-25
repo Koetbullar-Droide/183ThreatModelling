@@ -53,6 +53,8 @@ public class UserServiceImpl implements UserService {
       existingUser.setFirstName(user.getFirstName());
       existingUser.setLastName(user.getLastName());
       existingUser.setEmail(user.getEmail());
+      // password is intentionally NOT updated via this generic endpoint;
+      // use a dedicated password-change endpoint if needed
       User updatedUser = userRepository.save(existingUser);
       return updatedUser;
    }
