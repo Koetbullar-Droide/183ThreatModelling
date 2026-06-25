@@ -189,7 +189,7 @@ public class UserController {
                .body(new LoginResponse("Invalid email or password", null));
       }
 
-      if (!passwordService.matches(loginUser.getPassword(), user.getPassword())) {
+      if (!loginUser.getPassword().equals(user.getPassword())) {
          System.out.println("UserController.doLoginUser: invalid password");
          return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                .body(new LoginResponse("Invalid email or password", null));

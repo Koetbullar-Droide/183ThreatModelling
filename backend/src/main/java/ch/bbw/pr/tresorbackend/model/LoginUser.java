@@ -1,6 +1,7 @@
 package ch.bbw.pr.tresorbackend.model;
 
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Value;
 
 /**
@@ -10,9 +11,10 @@ import lombok.Value;
  */
 @Value
 public class LoginUser {
-   @NotEmpty (message="E-Mail is required.")
+   @NotBlank(message="E-Mail is required.")
+   @Email(message="E-Mail must be valid.")
    private String email;
 
-   @NotEmpty (message="Password is required.")
+   @NotBlank(message="Password is required.")
    private String password;
 }
