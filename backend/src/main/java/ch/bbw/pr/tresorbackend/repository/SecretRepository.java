@@ -4,11 +4,15 @@ import ch.bbw.pr.tresorbackend.model.Secret;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * SecretRepository
+ *
  * @author Peter Rutschmann
  */
 public interface SecretRepository extends JpaRepository<Secret, Long> {
-   List<Secret> findByUserId(Long userId);
+    List<Secret> findByUserId(Long userId);
+
+    Optional<Secret> findBySecretUuid(String secretUuid);
 }

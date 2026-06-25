@@ -21,20 +21,17 @@ const Users = ({loginValues}) => {
                 setErrorMessage(error.message);
             }
         };
-        fetchUsers();
+        fetchUsers().then();
     }, [loginValues]);
 
-    return (
-        <>
+    return (<>
             <h1>Client list</h1>
             <ul>
                 {users.map(user => (
-                    <li key={user.id}>{user.id} {user.firstName} {user.lastName} - {user.email} - {user.password}</li>
-                ))}
+                    <li key={user.userUuid}>{user.userUuid} {user.firstName} {user.lastName} - {user.email}</li>))}
             </ul>
-            {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
-        </>
-    );
+            {errorMessage && <p style={{color: 'red'}}>{errorMessage}</p>}
+        </>);
 };
 
 export default Users;

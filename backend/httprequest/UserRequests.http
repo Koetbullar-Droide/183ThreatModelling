@@ -17,24 +17,24 @@ Content-Type: application/json
 }
 
 ###
-#Get user with id 4
-GET http://localhost:8080/api/users/4
+#Get user with uuid
+GET http://localhost:8080/api/users/22222222-2222-4222-8222-222222222222
 Accept: application/json
 
 ###
-# Update user with id 4
-PUT http://localhost:8080/api/users/4
+# Update user with uuid
+PUT http://localhost:8080/api/users/22222222-2222-4222-8222-222222222222
 Content-Type: application/json
 
 {
   "firstName": "Iris",
-  "lastName":"Weber",
+  "lastName": "Weber",
   "email": "iris.weber@bbw.ch"
 }
 
 ###
-#Delete user with id 4
-DELETE http://localhost:8080/api/users/4
+#Delete user with uuid
+DELETE http://localhost:8080/api/users/22222222-2222-4222-8222-222222222222
 Accept: application/json
 
 ###
