@@ -22,40 +22,40 @@ import java.util.UUID;
 @Entity
 @Table(name = "user")
 public class User {
-    @Id
-    @JsonIgnore
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+   @Id
+   @JsonIgnore
+   @GeneratedValue(strategy = GenerationType.IDENTITY)
+   private Long id;
 
-    @Column(nullable = false, unique = true, name = "user_uuid")
-    private String userUuid;
+   @Column(nullable = false, unique = true, name = "user_uuid")
+   private String userUuid;
 
-    @Column(nullable = false, name = "first_name")
-    private String firstName;
+   @Column(nullable = false, name = "first_name")
+   private String firstName;
 
-    @Column(nullable = false, name = "last_name")
-    private String lastName;
+   @Column(nullable = false, name = "last_name")
+   private String lastName;
 
-    @Column(nullable = false, unique = true)
-    private String email;
+   @Column(nullable = false, unique = true)
+   private String email;
 
-    @JsonIgnore
+   @JsonIgnore
    @Column(nullable = false)
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private String password;
+   @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+   private String password;
 
-    public User(Long id, String firstName, String lastName, String email, String password) {
-        this.id = id;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.email = email;
-        this.password = password;
-    }
+   public User(Long id, String firstName, String lastName, String email, String password) {
+      this.id = id;
+      this.firstName = firstName;
+      this.lastName = lastName;
+      this.email = email;
+      this.password = password;
+   }
 
-    @PrePersist
-    public void prePersist() {
-        if (userUuid == null || userUuid.isBlank()) {
-            userUuid = UUID.randomUUID().toString();
-        }
-    }
+   @PrePersist
+   public void prePersist() {
+      if (userUuid == null || userUuid.isBlank()) {
+         userUuid = UUID.randomUUID().toString();
+      }
+   }
 }

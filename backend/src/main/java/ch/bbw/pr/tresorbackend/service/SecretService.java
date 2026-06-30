@@ -10,19 +10,19 @@ import java.util.List;
  * @author Peter Rutschmann
  */
 public interface SecretService {
-    Secret createSecret(Secret secret);
+   Secret createSecret(Secret secret);
 
-    Secret getSecretById(Long secretId);
+   Secret getSecretById(Long secretId);
 
-    Secret getSecretByUuid(String secretUuid);
+   Secret getSecretByUuid(String secretUuid);
 
-    List<Secret> getAllSecrets();
+   List<Secret> getAllSecrets();
 
-    Secret updateSecret(Secret secret);
+   Secret updateSecret(Secret secret);
 
-    void deleteSecret(Long secretId);
+   void deleteSecret(Long secretId);
 
-    void deleteSecretByUuid(String secretUuid);
+   void deleteSecretByUuid(String secretUuid);
 
-    List<Secret> getSecretsByUserId(Long userId);
+   List<Secret> getSecretsByUserId(Long userId);
 }

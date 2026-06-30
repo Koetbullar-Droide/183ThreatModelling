@@ -14,8 +14,8 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 public class EncryptCredentials {
-    private String userUuid;
-    private String email;
-    @NotEmpty(message = "encryption password id is required.")
-    private String encryptPassword;
+   private String userUuid;
+   private String email;
+   @NotEmpty(message = "encryption password id is required.")
+   private String encryptPassword;
 }

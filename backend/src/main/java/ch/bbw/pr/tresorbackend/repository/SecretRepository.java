@@ -12,7 +12,7 @@ import java.util.Optional;
  * @author Peter Rutschmann
  */
 public interface SecretRepository extends JpaRepository<Secret, Long> {
-    List<Secret> findByUserId(Long userId);
+   List<Secret> findByUserId(Long userId);
 
-    Optional<Secret> findBySecretUuid(String secretUuid);
+   Optional<Secret> findBySecretUuid(String secretUuid);
 }

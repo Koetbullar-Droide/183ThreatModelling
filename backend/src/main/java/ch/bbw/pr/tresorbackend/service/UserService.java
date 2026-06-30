@@ -10,21 +10,21 @@ import java.util.List;
  * @author Peter Rutschmann
  */
 public interface UserService {
-    User createUser(User user);
+   User createUser(User user);
 
-    User getUserById(Long userId);
+   User getUserById(Long userId);
 
-    User getUserByUuid(String userUuid);
+   User getUserByUuid(String userUuid);
 
-    User findByEmail(String email);
+   User findByEmail(String email);
 
-    List<User> getAllUsers();
+   List<User> getAllUsers();
 
-    User updateUser(User user);
+   User updateUser(User user);
 
-    User updateUserByUuid(String userUuid, User user);
+   User updateUserByUuid(String userUuid, User user);
 
-    boolean deleteUser(Long userId);
+   boolean deleteUser(Long userId);
 
-    boolean deleteUserByUuid(String userUuid);
+   boolean deleteUserByUuid(String userUuid);
 }
