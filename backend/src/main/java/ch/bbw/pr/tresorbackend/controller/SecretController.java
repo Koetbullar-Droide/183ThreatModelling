@@ -38,7 +38,9 @@ public class SecretController {
    // create secret REST API
    @CrossOrigin(origins = "${CROSS_ORIGIN}")
    @PostMapping
-   public ResponseEntity<String> createSecret2(@Valid @RequestBody NewSecret newSecret, BindingResult bindingResult) {
+   public ResponseEntity<String> createSecret2(@RequestHeader(value = "X-User-Uuid", required = false) String authenticatedUserUuid,
+                                               @Valid @RequestBody NewSecret newSecret,
+                                               BindingResult bindingResult) {
       //input validation
       if (bindingResult.hasErrors()) {
          List<String> errors = bindingResult.getFieldErrors().stream().map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage()).collect(Collectors.toList());
@@ -55,11 +57,14 @@ public class SecretController {
       }
       System.out.println("SecretController.createSecret, input validation passed");
 
-      User user = userService.findByEmail(newSecret.getEmail());
-      if (user == null) return ResponseEntity.notFound().build();
+      User authenticatedUser = getAuthenticatedUser(authenticatedUserUuid);
+      if (authenticatedUser == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+      if (!Objects.equals(authenticatedUser.getEmail(), newSecret.getEmail())) {
+         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+      }
 
       //transfer secret and encrypt content
-      Secret secret = new Secret(null, user.getId(), new EncryptUtil(newSecret.getEncryptPassword()).encrypt(newSecret.getContent().toString()));
+      Secret secret = new Secret(null, authenticatedUser.getId(), new EncryptUtil(newSecret.getEncryptPassword()).encrypt(newSecret.getContent().toString()));
       //save secret in db
       secretService.createSecret(secret);
       System.out.println("SecretController.createSecret, secret saved in db");
@@ -73,13 +78,17 @@ public class SecretController {
    // Build Get Secrets by userUuid REST API
    @CrossOrigin(origins = "${CROSS_ORIGIN}")
    @PostMapping("/byuseruuid")
-   public ResponseEntity<List<Secret>> getSecretsByUserUuid(@RequestBody EncryptCredentials credentials) {
+   public ResponseEntity<List<Secret>> getSecretsByUserUuid(@RequestHeader(value = "X-User-Uuid", required = false) String authenticatedUserUuid,
+                                                            @RequestBody EncryptCredentials credentials) {
       System.out.println("SecretController.getSecretsByUserUuid " + credentials);
 
-      User user = userService.getUserByUuid(credentials.getUserUuid());
-      if (user == null) return ResponseEntity.notFound().build();
+      User authenticatedUser = getAuthenticatedUser(authenticatedUserUuid);
+      if (authenticatedUser == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+      if (!Objects.equals(authenticatedUser.getUserUuid(), credentials.getUserUuid())) {
+         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+      }
 
-      List<Secret> secrets = secretService.getSecretsByUserId(user.getId());
+      List<Secret> secrets = secretService.getSecretsByUserId(authenticatedUser.getId());
       if (secrets.isEmpty()) {
          System.out.println("SecretController.getSecretsByUserUuid secret isEmpty");
          return ResponseEntity.notFound().build();
@@ -101,13 +110,17 @@ public class SecretController {
    // Build Get Secrets by email REST API
    @CrossOrigin(origins = "${CROSS_ORIGIN}")
    @PostMapping("/byemail")
-   public ResponseEntity<List<Secret>> getSecretsByEmail(@RequestBody EncryptCredentials credentials) {
+   public ResponseEntity<List<Secret>> getSecretsByEmail(@RequestHeader(value = "X-User-Uuid", required = false) String authenticatedUserUuid,
+                                                         @RequestBody EncryptCredentials credentials) {
       System.out.println("SecretController.getSecretsByEmail " + credentials);
 
-      User user = userService.findByEmail(credentials.getEmail());
-      if (user == null) return ResponseEntity.notFound().build();
+      User authenticatedUser = getAuthenticatedUser(authenticatedUserUuid);
+      if (authenticatedUser == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+      if (!Objects.equals(authenticatedUser.getEmail(), credentials.getEmail())) {
+         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+      }
 
-      List<Secret> secrets = secretService.getSecretsByUserId(user.getId());
+      List<Secret> secrets = secretService.getSecretsByUserId(authenticatedUser.getId());
       if (secrets.isEmpty()) {
          System.out.println("SecretController.getSecretsByEmail secret isEmpty");
          return ResponseEntity.notFound().build();
@@ -138,7 +151,10 @@ public class SecretController {
    // http://localhost:8080/api/secrets/{secretUuid}
    @CrossOrigin(origins = "${CROSS_ORIGIN}")
    @PutMapping("{secretUuid}")
-   public ResponseEntity<String> updateSecret(@PathVariable("secretUuid") String secretUuid, @Valid @RequestBody NewSecret newSecret, BindingResult bindingResult) {
+   public ResponseEntity<String> updateSecret(@PathVariable("secretUuid") String secretUuid,
+                                             @RequestHeader(value = "X-User-Uuid", required = false) String authenticatedUserUuid,
+                                             @Valid @RequestBody NewSecret newSecret,
+                                             BindingResult bindingResult) {
       //input validation
       if (bindingResult.hasErrors()) {
          List<String> errors = bindingResult.getFieldErrors().stream().map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage()).collect(Collectors.toList());
@@ -155,20 +171,19 @@ public class SecretController {
       }
 
       //get Secret with uuid
-      Secret dbSecrete = secretService.getSecretByUuid(secretUuid);
-      if (dbSecrete == null) {
+      User authenticatedUser = getAuthenticatedUser(authenticatedUserUuid);
+      if (authenticatedUser == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+
+      Secret dbSecret = secretService.getSecretByUuid(secretUuid);
+      if (dbSecret == null) {
          System.out.println("SecretController.updateSecret, secret not found in db");
          JsonObject obj = new JsonObject();
          obj.addProperty("answer", "Secret not found in db");
          String json = new Gson().toJson(obj);
          System.out.println("SecretController.updateSecret failed:" + json);
-         return ResponseEntity.badRequest().body(json);
+         return ResponseEntity.notFound().build();
       }
-      User user = userService.findByEmail(newSecret.getEmail());
-      if (user == null) return ResponseEntity.notFound().build();
-
-      //check if Secret in db has not same userid
-      if (!Objects.equals(dbSecrete.getUserId(), user.getId())) {
+      if (!Objects.equals(dbSecret.getUserId(), authenticatedUser.getId())) {
          System.out.println("SecretController.updateSecret, not same user id");
          JsonObject obj = new JsonObject();
          obj.addProperty("answer", "Secret has not same user id");
@@ -176,9 +191,13 @@ public class SecretController {
          System.out.println("SecretController.updateSecret failed:" + json);
          return ResponseEntity.status(HttpStatus.FORBIDDEN).body(json);
       }
+      if (!Objects.equals(authenticatedUser.getEmail(), newSecret.getEmail())) {
+         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+      }
+
       //check if Secret can be decrypted with password
       try {
-         new EncryptUtil(newSecret.getEncryptPassword()).decrypt(dbSecrete.getContent());
+         new EncryptUtil(newSecret.getEncryptPassword()).decrypt(dbSecret.getContent());
       } catch (EncryptionOperationNotPossibleException e) {
          System.out.println("SecretController.updateSecret, invalid password");
          JsonObject obj = new JsonObject();
@@ -188,7 +207,7 @@ public class SecretController {
          return ResponseEntity.badRequest().body(json);
       }
       //modify Secret in db.
-      Secret secret = new Secret(dbSecrete.getId(), user.getId(), new EncryptUtil(newSecret.getEncryptPassword()).encrypt(newSecret.getContent().toString()));
+      Secret secret = new Secret(dbSecret.getId(), authenticatedUser.getId(), new EncryptUtil(newSecret.getEncryptPassword()).encrypt(newSecret.getContent().toString()));
       Secret updatedSecret = secretService.updateSecret(secret);
       if (updatedSecret == null) {
          return ResponseEntity.notFound().build();
@@ -204,15 +223,21 @@ public class SecretController {
    // Build Delete Secret REST API
    @CrossOrigin(origins = "${CROSS_ORIGIN}")
    @DeleteMapping("{secretUuid}")
-   public ResponseEntity<String> deleteSecret(@PathVariable("secretUuid") String secretUuid, @RequestBody EncryptCredentials credentials) {
+   public ResponseEntity<String> deleteSecret(@PathVariable("secretUuid") String secretUuid,
+                                              @RequestHeader(value = "X-User-Uuid", required = false) String authenticatedUserUuid,
+                                              @RequestBody EncryptCredentials credentials) {
+      User authenticatedUser = getAuthenticatedUser(authenticatedUserUuid);
+      if (authenticatedUser == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+
       Secret dbSecret = secretService.getSecretByUuid(secretUuid);
       if (dbSecret == null) return ResponseEntity.notFound().build();
 
-      User user = userService.findByEmail(credentials.getEmail());
-      if (user == null) return ResponseEntity.notFound().build();
-      if (!Objects.equals(dbSecret.getUserId(), user.getId())) {
+      if (!Objects.equals(dbSecret.getUserId(), authenticatedUser.getId())) {
          System.out.println("SecretController.deleteSecret, not same user id");
          return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Secret has not same user id");
+      }
+      if (!Objects.equals(authenticatedUser.getEmail(), credentials.getEmail())) {
+         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
       }
 
       try {
@@ -225,5 +250,12 @@ public class SecretController {
       secretService.deleteSecretByUuid(secretUuid);
       System.out.println("SecretController.deleteSecret succesfully: " + secretUuid);
       return new ResponseEntity<>("Secret successfully deleted!", HttpStatus.OK);
+   }
+
+   private User getAuthenticatedUser(String authenticatedUserUuid) {
+      if (authenticatedUserUuid == null || authenticatedUserUuid.isBlank()) {
+         return null;
+      }
+      return userService.getUserByUuid(authenticatedUserUuid);
    }
 }
