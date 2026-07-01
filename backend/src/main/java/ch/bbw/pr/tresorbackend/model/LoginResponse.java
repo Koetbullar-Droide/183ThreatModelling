@@ -7,7 +7,8 @@ import lombok.Setter;
 
 /**
  * LoginResponse
- *   Data-transfer-object, response to client in case of a login request
+ * Data-transfer-object, response to client in case of a login request
+ *
  * @author Peter Rutschmann
  */
 @Getter
@@ -16,5 +17,5 @@ import lombok.Setter;
 @AllArgsConstructor
 public class LoginResponse {
     private String message;
-    private Long userId;
+    private String userUuid;
 }

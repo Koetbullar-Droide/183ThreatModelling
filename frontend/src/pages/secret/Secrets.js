@@ -13,7 +13,7 @@ const Secrets = ({loginValues}) => {
     useEffect(() => {
         const fetchSecrets = async () => {
             setErrorMessage('');
-            if( ! loginValues.email){
+            if (!loginValues.email) {
                 console.error('Secrets: No valid email, please do login first:' + loginValues);
                 setErrorMessage("No valid email, please do login first.");
             } else {
@@ -30,41 +30,32 @@ const Secrets = ({loginValues}) => {
         fetchSecrets();
     }, [loginValues]);
 
-    return (
-        <>
+    return (<>
             <h1>my secrets</h1>
             {errorMessage && <p style={{color: 'red'}}>{errorMessage}</p>}
-             <form>
+            <form>
                 <h2>secrets</h2>
                 <table border="1">
                     <thead>
                     <tr>
-                        <th>secret id</th>
-                        <th>user id</th>
+                        <th>secret uuid</th>
                         <th>content</th>
                     </tr>
                     </thead>
                     <tbody>
-                    {secrets?.length > 0 ? (
-                        secrets.map(secret => (
-                            <tr key={secret.id}>
-                                <td>{secret.id}</td>
-                                <td>{secret.userId}</td>
+                    {secrets?.length > 0 ? (secrets.map(secret => (<tr key={secret.secretUuid}>
+                                <td>{secret.secretUuid}</td>
                                 <td>
                                     <pre>{JSON.stringify(secret.content, null, 2)}</pre>
                                 </td>
-                            </tr>
-                        ))
-                    ) : (
-                        <tr>
-                            <td colSpan="3">No secrets available</td>
-                        </tr>
-                    )}
+                            </tr>))) : (<tr>
+                            <td colSpan="2">No secrets available</td>
+                        </tr>)}
                     </tbody>
                 </table>
             </form>
-        </>
-    );
+        </>);
 };
 
 export default Secrets;
+

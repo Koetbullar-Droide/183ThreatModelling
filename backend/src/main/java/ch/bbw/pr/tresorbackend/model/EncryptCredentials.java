@@ -5,6 +5,7 @@ import lombok.*;
 
 /**
  * EncryptCredentials
+ *
  * @author Peter Rutschmann
  */
 @Getter
@@ -13,8 +14,8 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 public class EncryptCredentials {
-   private long userId;
+   private String userUuid;
    private String email;
-   @NotEmpty(message="encryption password id is required.")
+   @NotEmpty(message = "encryption password id is required.")
    private String encryptPassword;
 }

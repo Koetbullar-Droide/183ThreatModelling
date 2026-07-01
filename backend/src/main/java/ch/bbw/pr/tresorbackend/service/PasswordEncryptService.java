@@ -3,9 +3,14 @@ package ch.bbw.pr.tresorbackend.service;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+/**
+ * PasswordEncryptService
+ * used to hash password and verify match
+ *
+ * @author Peter Rutschmann
+ */
 @Service
 public class PasswordEncryptService {
-
    private final BCryptPasswordEncoder passwordEncoder;
 
    public PasswordEncryptService() {
