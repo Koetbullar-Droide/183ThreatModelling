@@ -1,9 +1,6 @@
-DROP
-DATABASE IF EXISTS tresordb;
-CREATE
-DATABASE tresordb;
-USE
-tresordb;
+DROP DATABASE IF EXISTS tresordb;
+CREATE DATABASE tresordb;
+USE tresordb;
 
 CREATE
 USER IF NOT EXISTS 'tresoruser'@'%' IDENTIFIED BY 'tresorpassword';
