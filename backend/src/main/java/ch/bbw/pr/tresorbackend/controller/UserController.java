@@ -88,8 +88,13 @@ public class UserController {
    // build get user by uuid REST API
    @CrossOrigin(origins = "${CROSS_ORIGIN}")
    @GetMapping("{userUuid}")
-   public ResponseEntity<User> getUserById(@PathVariable("userUuid") String userUuid) {
-      User user = userService.getUserByUuid(userUuid);
+   public ResponseEntity<User> getUserById(@PathVariable("userUuid") String userUuid,
+                                           @RequestHeader(value = "X-User-Uuid", required = false) String authenticatedUserUuid) {
+      if (authenticatedUserUuid == null || !authenticatedUserUuid.equals(userUuid)) {
+         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+      }
+
+      User user = userService.getUserByUuid(authenticatedUserUuid);
       if (user == null) return ResponseEntity.notFound().build();
       return new ResponseEntity<>(user, HttpStatus.OK);
    }
@@ -99,16 +104,20 @@ public class UserController {
    @CrossOrigin(origins = "${CROSS_ORIGIN}")
    @GetMapping
    public ResponseEntity<List<User>> getAllUsers() {
-      List<User> users = userService.getAllUsers();
-      if (users.isEmpty()) return ResponseEntity.notFound().build();
-      return new ResponseEntity<>(users, HttpStatus.OK);
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
    }
 
    // Build Update User REST API
    @CrossOrigin(origins = "${CROSS_ORIGIN}")
    @PutMapping("{userUuid}")
-   public ResponseEntity<User> updateUser(@PathVariable("userUuid") String userUuid, @RequestBody User user) {
-      User updatedUser = userService.updateUserByUuid(userUuid, user);
+   public ResponseEntity<User> updateUser(@PathVariable("userUuid") String userUuid,
+                                          @RequestHeader(value = "X-User-Uuid", required = false) String authenticatedUserUuid,
+                                          @RequestBody User user) {
+      if (authenticatedUserUuid == null || !authenticatedUserUuid.equals(userUuid)) {
+         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+      }
+
+      User updatedUser = userService.updateUserByUuid(authenticatedUserUuid, user);
       if (updatedUser == null) return ResponseEntity.notFound().build();
       return new ResponseEntity<>(updatedUser, HttpStatus.OK);
    }
@@ -116,8 +125,13 @@ public class UserController {
    // Build Delete User REST API
    @CrossOrigin(origins = "${CROSS_ORIGIN}")
    @DeleteMapping("{userUuid}")
-   public ResponseEntity<String> deleteUser(@PathVariable("userUuid") String userUuid) {
-      if (userService.deleteUserByUuid(userUuid))
+   public ResponseEntity<String> deleteUser(@PathVariable("userUuid") String userUuid,
+                                            @RequestHeader(value = "X-User-Uuid", required = false) String authenticatedUserUuid) {
+      if (authenticatedUserUuid == null || !authenticatedUserUuid.equals(userUuid)) {
+         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+      }
+
+      if (userService.deleteUserByUuid(authenticatedUserUuid))
          return new ResponseEntity<>("User successfully deleted!", HttpStatus.OK);
       return ResponseEntity.notFound().build();
    }
@@ -125,12 +139,14 @@ public class UserController {
    // get user uuid by email
    @CrossOrigin(origins = "${CROSS_ORIGIN}")
    @PostMapping("/byemail")
-   public ResponseEntity<String> getUserUuidByEmail(@RequestBody EmailAdress email, BindingResult bindingResult) {
-      System.out.println("UserController.getUserUuidByEmail: " + email);
+   public ResponseEntity<String> getUserUuidByEmail(@RequestBody EmailAdress email,
+                                                    BindingResult bindingResult,
+                                                    @RequestHeader(value = "X-User-Uuid", required = false) String authenticatedUserUuid) {
+      logger.info("UserController.getUserUuidByEmail: {}", email.getEmail());
       //input validation
       if (bindingResult.hasErrors()) {
          List<String> errors = bindingResult.getFieldErrors().stream().map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage()).collect(Collectors.toList());
-         System.out.println("UserController.createUser " + errors);
+         logger.info("UserController.getUserUuidByEmail validation errors: {}", errors);
 
          JsonArray arr = new JsonArray();
          errors.forEach(arr::add);
@@ -143,6 +159,19 @@ public class UserController {
       }
 
       logger.info("UserController.getUserUuidByEmail: input validation passed");
+
+      if (authenticatedUserUuid == null) {
+         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+      }
+
+      User authenticatedUser = userService.getUserByUuid(authenticatedUserUuid);
+      if (authenticatedUser == null) {
+         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+      }
+
+      if (!authenticatedUser.getEmail().equals(email.getEmail())) {
+         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+      }
 
       User user = userService.findByEmail(email.getEmail());
       if (user == null) {
@@ -179,8 +208,8 @@ public class UserController {
          return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new LoginResponse("Invalid email or password", null));
       }
 
-      if (!loginUser.getPassword().equals(user.getPassword())) {
-         System.out.println("UserController.doLoginUser: invalid password");
+      if (!passwordService.matches(loginUser.getPassword(), user.getPassword())) {
+         logger.info("UserController.doLoginUser: invalid password");
          return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new LoginResponse("Invalid email or password", null));
       }
 
