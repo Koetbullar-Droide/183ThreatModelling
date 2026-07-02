@@ -142,11 +142,11 @@ public class UserController {
    public ResponseEntity<String> getUserUuidByEmail(@RequestBody EmailAdress email,
                                                     BindingResult bindingResult,
                                                     @RequestHeader(value = "X-User-Uuid", required = false) String authenticatedUserUuid) {
-      System.out.println("UserController.getUserUuidByEmail: " + email);
+      logger.info("UserController.getUserUuidByEmail: {}", email.getEmail());
       //input validation
       if (bindingResult.hasErrors()) {
          List<String> errors = bindingResult.getFieldErrors().stream().map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage()).collect(Collectors.toList());
-         System.out.println("UserController.createUser " + errors);
+         logger.info("UserController.getUserUuidByEmail validation errors: {}", errors);
 
          JsonArray arr = new JsonArray();
          errors.forEach(arr::add);
@@ -209,7 +209,7 @@ public class UserController {
       }
 
       if (!passwordService.matches(loginUser.getPassword(), user.getPassword())) {
-         System.out.println("UserController.doLoginUser: invalid password");
+         logger.info("UserController.doLoginUser: invalid password");
          return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new LoginResponse("Invalid email or password", null));
       }
 

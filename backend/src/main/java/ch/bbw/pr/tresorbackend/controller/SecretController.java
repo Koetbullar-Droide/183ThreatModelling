@@ -13,6 +13,8 @@ import com.google.gson.JsonObject;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.jasypt.exceptions.EncryptionOperationNotPossibleException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -32,6 +34,7 @@ import java.util.stream.Collectors;
 @RequestMapping("api/secrets")
 public class SecretController {
 
+   private static final Logger logger = LoggerFactory.getLogger(SecretController.class);
    private SecretService secretService;
    private UserService userService;
 
@@ -44,7 +47,7 @@ public class SecretController {
       //input validation
       if (bindingResult.hasErrors()) {
          List<String> errors = bindingResult.getFieldErrors().stream().map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage()).collect(Collectors.toList());
-         System.out.println("SecretController.createSecret " + errors);
+         logger.info("SecretController.createSecret validation errors: {}", errors);
 
          JsonArray arr = new JsonArray();
          errors.forEach(arr::add);
@@ -52,10 +55,10 @@ public class SecretController {
          obj.add("message", arr);
          String json = new Gson().toJson(obj);
 
-         System.out.println("SecretController.createSecret, validation fails: " + json);
+         logger.info("SecretController.createSecret, validation fails");
          return ResponseEntity.badRequest().body(json);
       }
-      System.out.println("SecretController.createSecret, input validation passed");
+      logger.info("SecretController.createSecret, input validation passed");
 
       User authenticatedUser = getAuthenticatedUser(authenticatedUserUuid);
       if (authenticatedUser == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -67,11 +70,11 @@ public class SecretController {
       Secret secret = new Secret(null, authenticatedUser.getId(), new EncryptUtil(newSecret.getEncryptPassword()).encrypt(newSecret.getContent().toString()));
       //save secret in db
       secretService.createSecret(secret);
-      System.out.println("SecretController.createSecret, secret saved in db");
+      logger.info("SecretController.createSecret, secret saved in db");
       JsonObject obj = new JsonObject();
       obj.addProperty("answer", "Secret saved");
       String json = new Gson().toJson(obj);
-      System.out.println("SecretController.createSecret " + json);
+      logger.info("SecretController.createSecret completed");
       return ResponseEntity.accepted().body(json);
    }
 
@@ -80,7 +83,7 @@ public class SecretController {
    @PostMapping("/byuseruuid")
    public ResponseEntity<List<Secret>> getSecretsByUserUuid(@RequestHeader(value = "X-User-Uuid", required = false) String authenticatedUserUuid,
                                                             @RequestBody EncryptCredentials credentials) {
-      System.out.println("SecretController.getSecretsByUserUuid " + credentials);
+      logger.info("SecretController.getSecretsByUserUuid called");
 
       User authenticatedUser = getAuthenticatedUser(authenticatedUserUuid);
       if (authenticatedUser == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -90,7 +93,7 @@ public class SecretController {
 
       List<Secret> secrets = secretService.getSecretsByUserId(authenticatedUser.getId());
       if (secrets.isEmpty()) {
-         System.out.println("SecretController.getSecretsByUserUuid secret isEmpty");
+         logger.info("SecretController.getSecretsByUserUuid secret isEmpty");
          return ResponseEntity.notFound().build();
       }
       //Decrypt content
@@ -98,12 +101,12 @@ public class SecretController {
          try {
             secret.setContent(new EncryptUtil(credentials.getEncryptPassword()).decrypt(secret.getContent()));
          } catch (EncryptionOperationNotPossibleException e) {
-            System.out.println("SecretController.getSecretsByUserUuid " + e + " " + secret);
+            logger.info("SecretController.getSecretsByUserUuid decryption failed");
             secret.setContent("not encryptable. Wrong password?");
          }
       }
 
-      System.out.println("SecretController.getSecretsByUserUuid " + secrets);
+      logger.info("SecretController.getSecretsByUserUuid returning {} secrets", secrets.size());
       return ResponseEntity.ok(secrets);
    }
 
@@ -112,7 +115,7 @@ public class SecretController {
    @PostMapping("/byemail")
    public ResponseEntity<List<Secret>> getSecretsByEmail(@RequestHeader(value = "X-User-Uuid", required = false) String authenticatedUserUuid,
                                                          @RequestBody EncryptCredentials credentials) {
-      System.out.println("SecretController.getSecretsByEmail " + credentials);
+      logger.info("SecretController.getSecretsByEmail called");
 
       User authenticatedUser = getAuthenticatedUser(authenticatedUserUuid);
       if (authenticatedUser == null) return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -122,7 +125,7 @@ public class SecretController {
 
       List<Secret> secrets = secretService.getSecretsByUserId(authenticatedUser.getId());
       if (secrets.isEmpty()) {
-         System.out.println("SecretController.getSecretsByEmail secret isEmpty");
+         logger.info("SecretController.getSecretsByEmail secret isEmpty");
          return ResponseEntity.notFound().build();
       }
       //Decrypt content
@@ -130,12 +133,12 @@ public class SecretController {
          try {
             secret.setContent(new EncryptUtil(credentials.getEncryptPassword()).decrypt(secret.getContent()));
          } catch (EncryptionOperationNotPossibleException e) {
-            System.out.println("SecretController.getSecretsByEmail " + e + " " + secret);
+            logger.info("SecretController.getSecretsByEmail decryption failed");
             secret.setContent("not encryptable. Wrong password?");
          }
       }
 
-      System.out.println("SecretController.getSecretsByEmail " + secrets);
+      logger.info("SecretController.getSecretsByEmail returning {} secrets", secrets.size());
       return ResponseEntity.ok(secrets);
    }
 
@@ -158,7 +161,7 @@ public class SecretController {
       //input validation
       if (bindingResult.hasErrors()) {
          List<String> errors = bindingResult.getFieldErrors().stream().map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage()).collect(Collectors.toList());
-         System.out.println("SecretController.createSecret " + errors);
+         logger.info("SecretController.updateSecret validation errors: {}", errors);
 
          JsonArray arr = new JsonArray();
          errors.forEach(arr::add);
@@ -166,7 +169,7 @@ public class SecretController {
          obj.add("message", arr);
          String json = new Gson().toJson(obj);
 
-         System.out.println("SecretController.updateSecret, validation fails: " + json);
+         logger.info("SecretController.updateSecret, validation fails");
          return ResponseEntity.badRequest().body(json);
       }
 
@@ -176,19 +179,19 @@ public class SecretController {
 
       Secret dbSecret = secretService.getSecretByUuid(secretUuid);
       if (dbSecret == null) {
-         System.out.println("SecretController.updateSecret, secret not found in db");
+         logger.info("SecretController.updateSecret, secret not found in db");
          JsonObject obj = new JsonObject();
          obj.addProperty("answer", "Secret not found in db");
          String json = new Gson().toJson(obj);
-         System.out.println("SecretController.updateSecret failed:" + json);
+         logger.info("SecretController.updateSecret failed: secret not found");
          return ResponseEntity.notFound().build();
       }
       if (!Objects.equals(dbSecret.getUserId(), authenticatedUser.getId())) {
-         System.out.println("SecretController.updateSecret, not same user id");
+         logger.info("SecretController.updateSecret, not same user id");
          JsonObject obj = new JsonObject();
          obj.addProperty("answer", "Secret has not same user id");
          String json = new Gson().toJson(obj);
-         System.out.println("SecretController.updateSecret failed:" + json);
+         logger.info("SecretController.updateSecret failed: wrong owner");
          return ResponseEntity.status(HttpStatus.FORBIDDEN).body(json);
       }
       if (!Objects.equals(authenticatedUser.getEmail(), newSecret.getEmail())) {
@@ -199,11 +202,11 @@ public class SecretController {
       try {
          new EncryptUtil(newSecret.getEncryptPassword()).decrypt(dbSecret.getContent());
       } catch (EncryptionOperationNotPossibleException e) {
-         System.out.println("SecretController.updateSecret, invalid password");
+         logger.info("SecretController.updateSecret, invalid password");
          JsonObject obj = new JsonObject();
          obj.addProperty("answer", "Password not correct.");
          String json = new Gson().toJson(obj);
-         System.out.println("SecretController.updateSecret failed:" + json);
+         logger.info("SecretController.updateSecret failed: wrong password");
          return ResponseEntity.badRequest().body(json);
       }
       //modify Secret in db.
@@ -212,11 +215,11 @@ public class SecretController {
       if (updatedSecret == null) {
          return ResponseEntity.notFound().build();
       }
-      System.out.println("SecretController.updateSecret, secret updated in db");
+      logger.info("SecretController.updateSecret, secret updated in db");
       JsonObject obj = new JsonObject();
       obj.addProperty("answer", "Secret updated");
       String json = new Gson().toJson(obj);
-      System.out.println("SecretController.updateSecret " + json);
+      logger.info("SecretController.updateSecret completed");
       return ResponseEntity.accepted().body(json);
    }
 
@@ -233,7 +236,7 @@ public class SecretController {
       if (dbSecret == null) return ResponseEntity.notFound().build();
 
       if (!Objects.equals(dbSecret.getUserId(), authenticatedUser.getId())) {
-         System.out.println("SecretController.deleteSecret, not same user id");
+         logger.info("SecretController.deleteSecret, not same user id");
          return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Secret has not same user id");
       }
       if (!Objects.equals(authenticatedUser.getEmail(), credentials.getEmail())) {
@@ -243,12 +246,12 @@ public class SecretController {
       try {
          new EncryptUtil(credentials.getEncryptPassword()).decrypt(dbSecret.getContent());
       } catch (EncryptionOperationNotPossibleException e) {
-         System.out.println("SecretController.deleteSecret, invalid password");
+         logger.info("SecretController.deleteSecret, invalid password");
          return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Password not correct.");
       }
 
       secretService.deleteSecretByUuid(secretUuid);
-      System.out.println("SecretController.deleteSecret succesfully: " + secretUuid);
+      logger.info("SecretController.deleteSecret successfully: {}", secretUuid);
       return new ResponseEntity<>("Secret successfully deleted!", HttpStatus.OK);
    }
 
