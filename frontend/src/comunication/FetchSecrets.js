@@ -17,7 +17,8 @@ export const postSecret = async ({loginValues, content}) => {
         const response = await fetch(`${API_URL}/secrets`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-User-Uuid': loginValues.userUuid
             },
             body: JSON.stringify({
                 email: loginValues.email,
@@ -53,7 +54,8 @@ export const getSecretsforUser = async (loginValues) => {
         const response = await fetch(`${API_URL}/secrets/byemail`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-User-Uuid': loginValues.userUuid
             },
             body: JSON.stringify({
                 email: loginValues.email,

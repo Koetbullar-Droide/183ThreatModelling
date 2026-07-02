@@ -16,7 +16,8 @@ function LoginUser({loginValues, setLoginValues}) {
         setErrorMessage('');
 
         try {
-            await postUserLogin(loginValues);
+            const data = await postUserLogin(loginValues);
+            setLoginValues(prev => ({...prev, userUuid: data.userUuid}));
             navigate('/');
         } catch (error) {
             console.error('Failed to fetch to server:', error.message);

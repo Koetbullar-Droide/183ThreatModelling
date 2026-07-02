@@ -18,7 +18,8 @@ CREATE TABLE user
     email      VARCHAR(255) NOT NULL,
     password   LONGTEXT     NOT NULL,
     PRIMARY KEY (id),
-    UNIQUE (user_uuid)
+    UNIQUE (user_uuid),
+    UNIQUE (email)
 );
 
 CREATE TABLE secret
