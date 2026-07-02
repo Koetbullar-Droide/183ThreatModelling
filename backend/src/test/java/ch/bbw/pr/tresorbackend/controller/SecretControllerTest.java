@@ -55,50 +55,59 @@ class SecretControllerTest {
       when(userService.getUserByUuid(credentials.getUserUuid())).thenReturn(user);
       when(secretService.getSecretsByUserId(user.getId())).thenReturn(List.of());
 
-      ResponseEntity<List<Secret>> response = secretController.getSecretsByUserUuid(credentials);
+      ResponseEntity<List<Secret>> response = secretController.getSecretsByUserUuid(credentials.getUserUuid(), credentials);
 
       assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
       verify(secretService).getSecretsByUserId(1L);
    }
 
-   @Test
-   void updateSecretRejectsForeignSecret() throws Exception {
-      NewSecret newSecret = new NewSecret("hans.muster@bbw.ch", objectMapper.readTree("{\"kind\":\"note\",\"content\":\"new\"}"), "xxxyyy");
-      Secret foreignSecret = new Secret(3L, 2L, "encryptedContent");
-      foreignSecret.setSecretUuid("cccccccc-cccc-4ccc-8ccc-cccccccccccc");
-      when(secretService.getSecretByUuid(foreignSecret.getSecretUuid())).thenReturn(foreignSecret);
-      when(userService.findByEmail(newSecret.getEmail())).thenReturn(new User(1L, "Hans", "Muster", "hans.muster@bbw.ch", "hashedPassword"));
+@Test
+    void updateSecretRejectsForeignSecret() throws Exception {
+       NewSecret newSecret = new NewSecret("hans.muster@bbw.ch", objectMapper.readTree("{\"kind\":\"note\",\"content\":\"new\"}"), "xxxyyy");
+       Secret foreignSecret = new Secret(3L, 2L, "encryptedContent");
+       foreignSecret.setSecretUuid("cccccccc-cccc-4ccc-8ccc-cccccccccccc");
+       when(secretService.getSecretByUuid(foreignSecret.getSecretUuid())).thenReturn(foreignSecret);
+       User requestingUser = new User(1L, "Hans", "Muster", "hans.muster@bbw.ch", "hashedPassword");
+       String requestingUserUuid = "11111111-1111-4111-8111-111111111111";
+       requestingUser.setUserUuid(requestingUserUuid);
+       when(userService.getUserByUuid(requestingUserUuid)).thenReturn(requestingUser);
 
-      ResponseEntity<String> response = secretController.updateSecret(foreignSecret.getSecretUuid(), newSecret, bindingResult(newSecret));
+       ResponseEntity<String> response = secretController.updateSecret(foreignSecret.getSecretUuid(), requestingUserUuid, newSecret, bindingResult(newSecret));
 
       assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
       verify(secretService, never()).updateSecret(any(Secret.class));
    }
 
-   @Test
-   void deleteSecretRejectsForeignSecret() {
-      EncryptCredentials credentials = new EncryptCredentials(null, "hans.muster@bbw.ch", "xxxyyy");
-      Secret foreignSecret = new Secret(3L, 2L, "encryptedContent");
-      foreignSecret.setSecretUuid("cccccccc-cccc-4ccc-8ccc-cccccccccccc");
-      when(secretService.getSecretByUuid(foreignSecret.getSecretUuid())).thenReturn(foreignSecret);
-      when(userService.findByEmail(credentials.getEmail())).thenReturn(new User(1L, "Hans", "Muster", "hans.muster@bbw.ch", "hashedPassword"));
+@Test
+    void deleteSecretRejectsForeignSecret() {
+       EncryptCredentials credentials = new EncryptCredentials(null, "hans.muster@bbw.ch", "xxxyyy");
+       Secret foreignSecret = new Secret(3L, 2L, "encryptedContent");
+       foreignSecret.setSecretUuid("cccccccc-cccc-4ccc-8ccc-cccccccccccc");
+       when(secretService.getSecretByUuid(foreignSecret.getSecretUuid())).thenReturn(foreignSecret);
+       User requestingUser = new User(1L, "Hans", "Muster", "hans.muster@bbw.ch", "hashedPassword");
+       String requestingUserUuid = "11111111-1111-4111-8111-111111111111";
+       requestingUser.setUserUuid(requestingUserUuid);
+       when(userService.getUserByUuid(requestingUserUuid)).thenReturn(requestingUser);
 
-      ResponseEntity<String> response = secretController.deleteSecret(foreignSecret.getSecretUuid(), credentials);
+       ResponseEntity<String> response = secretController.deleteSecret(foreignSecret.getSecretUuid(), requestingUserUuid, credentials);
 
       assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
       verify(secretService, never()).deleteSecretByUuid(foreignSecret.getSecretUuid());
    }
 
-   @Test
-   void deleteSecretDeletesOwnedSecretWithCorrectPassword() {
-      EncryptCredentials credentials = new EncryptCredentials(null, "hans.muster@bbw.ch", "xxxyyy");
-      String encryptedContent = new EncryptUtil(credentials.getEncryptPassword()).encrypt("{\"kind\":\"note\"}");
-      Secret ownedSecret = new Secret(3L, 1L, encryptedContent);
-      ownedSecret.setSecretUuid("cccccccc-cccc-4ccc-8ccc-cccccccccccc");
-      when(secretService.getSecretByUuid(ownedSecret.getSecretUuid())).thenReturn(ownedSecret);
-      when(userService.findByEmail(credentials.getEmail())).thenReturn(new User(1L, "Hans", "Muster", "hans.muster@bbw.ch", "hashedPassword"));
+@Test
+    void deleteSecretDeletesOwnedSecretWithCorrectPassword() {
+       EncryptCredentials credentials = new EncryptCredentials(null, "hans.muster@bbw.ch", "xxxyyy");
+       String encryptedContent = new EncryptUtil(credentials.getEncryptPassword()).encrypt("{\"kind\":\"note\"}");
+       Secret ownedSecret = new Secret(3L, 1L, encryptedContent);
+       ownedSecret.setSecretUuid("cccccccc-cccc-4ccc-8ccc-cccccccccccc");
+       when(secretService.getSecretByUuid(ownedSecret.getSecretUuid())).thenReturn(ownedSecret);
+       User requestingUser = new User(1L, "Hans", "Muster", "hans.muster@bbw.ch", "hashedPassword");
+       String requestingUserUuid = "11111111-1111-4111-8111-111111111111";
+       requestingUser.setUserUuid(requestingUserUuid);
+       when(userService.getUserByUuid(requestingUserUuid)).thenReturn(requestingUser);
 
-      ResponseEntity<String> response = secretController.deleteSecret(ownedSecret.getSecretUuid(), credentials);
+       ResponseEntity<String> response = secretController.deleteSecret(ownedSecret.getSecretUuid(), requestingUserUuid, credentials);
 
       assertEquals(HttpStatus.OK, response.getStatusCode());
       verify(secretService).deleteSecretByUuid(ownedSecret.getSecretUuid());
