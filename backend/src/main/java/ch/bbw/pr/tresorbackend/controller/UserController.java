@@ -208,7 +208,7 @@ public class UserController {
          return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new LoginResponse("Invalid email or password", null));
       }
 
-      if (!loginUser.getPassword().equals(user.getPassword())) {
+      if (!passwordService.matches(loginUser.getPassword(), user.getPassword())) {
          System.out.println("UserController.doLoginUser: invalid password");
          return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new LoginResponse("Invalid email or password", null));
       }
